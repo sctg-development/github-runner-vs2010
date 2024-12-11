@@ -1,6 +1,73 @@
 # GitHub Runner with Visual Studio 2010
 
-This repository provides a Docker image `sctg/github-runner-vs2010:2.321.0` for running a self-hosted GitHub runner with Visual Studio 2010 and Windows SDK 7.1a. The main purpose is to create a Windows XP x86 capable runner.
+This repository provides a Docker image `sctg/github-runner-vs2010:2.321.0` for running a self-hosted GitHub runner with Visual Studio 2010 and Windows SDK 7.1a. The main purpose is to enable building Windows XP-compatible applications, as GitHub's standard runners no longer support Visual Studio 2010 and Microsoft has ended Windows XP support.
+
+## Prerequisites
+
+- Docker installed on your host machine
+- A GitHub account with appropriate permissions
+- A Personal Access Token (PAT) from GitHub
+- Windows Server 2019 (for running Windows containers)
+
+## Setting Up Self-Hosted Runners in GitHub
+
+Before running the Docker container, you need to configure your GitHub repository to accept self-hosted runners:
+
+1. Go to your GitHub repository settings
+2. Navigate to "Settings" → "Actions" → "Runners"
+3. Click on "New self-hosted runner"
+4. Note down the repository URL and token (you'll need these later)
+
+Important security considerations:
+- Self-hosted runners should only be used in private repositories by default
+- If using in public repositories, enable the "Require approval for all outside collaborators" setting
+- Set up runner groups to control access to runners
+- Configure allowed actions and workflows in repository settings
+
+Runner labels:
+- Add relevant labels to your runner (e.g., 'windows-2019', 'vs2010')
+- These labels are used in workflow files to target specific runners
+
+## Running Windows Docker Containers on Windows Server 2019
+
+### Prerequisites
+1. Install Windows Server 2019 with Desktop Experience
+2. Enable Containers and Hyper-V features:
+```powershell
+Install-WindowsFeature Containers
+Install-WindowsFeature Hyper-V
+Restart-Computer -Force
+```
+
+3. Install Docker:
+```powershell
+# Install Docker
+Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/Windows-Containers/master/helpful_tools/Install-DockerCE/install-docker-ce.ps1" -OutFile install-docker-ce.ps1
+.\install-docker-ce.ps1
+
+# Start Docker service
+Start-Service docker
+
+# Switch to Windows containers
+& $Env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchDaemon
+
+# Test Docker installation
+docker version
+```
+
+4. Configure Docker for Windows containers:
+```powershell
+# Set Docker to use Windows containers by default
+[Environment]::SetEnvironmentVariable("DOCKER_DEFAULT_PLATFORM", "windows", "Machine")
+```
+
+### Running the Container
+When running Windows containers, ensure you use the correct isolation mode:
+```powershell
+docker run --isolation=process -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.321.0
+```
+
+[Rest of the README continues as before...]
 
 ## Building the Docker Image
 
@@ -24,20 +91,92 @@ Run the container with the following command:
 docker run -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.321.0
 ```
 
+## Using the Runner in GitHub Workflows
+
+To use this runner in your GitHub workflows, you need to specify the `runs-on` field with your self-hosted runner label. Here's a sample workflow that builds a Windows XP-compatible application:
+
+```yaml
+name: Build Windows XP App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: self-hosted  # Use your self-hosted runner
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSBuild
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
+        
+    - name: Build Solution
+      shell: cmd
+      run: |
+        msbuild YourSolution.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v100 /p:WindowsTargetPlatformVersion=7.1A
+        
+    - name: Run Tests
+      shell: cmd
+      run: |
+        vstest.console.exe ./path/to/tests.dll
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-xp-build
+        path: path/to/your/build/output/**
+```
+
+Note: Replace `YourSolution.sln` and paths with your actual project files and build output locations.
+
 ## How it Works
 
-The Dockerfile sets up the environment with Visual Studio 2010, .NET Framework 4.8, and other necessary tools. It downloads and configures the GitHub runner based on the specified version (default is `2.321.0`).
+The Dockerfile sets up the environment with:
+- Visual Studio 2010
+- .NET Framework 4.8
+- Windows SDK 7.1a
+- GitHub runner (version 2.321.0 by default)
 
-The `start.ps1` script is used as the entry point for the Docker container. It performs the following tasks:
+The `start.ps1` script handles the container initialization by:
+1. Authenticating with GitHub using the provided `GH_TOKEN`
+2. Obtaining a registration token for the GitHub runner
+3. Registering the runner with the specified repository
+4. Starting the runner process
 
-1. Logs into GitHub using the provided `GH_TOKEN`.
-2. Retrieves a registration token for the GitHub runner.
-3. Registers the runner with the specified repository (`GH_OWNER/GH_REPOSITORY`).
-4. Starts the runner to listen for jobs.
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Runner Registration Fails**:
+   - Verify your PAT has the correct permissions
+   - Ensure the repository exists and you have access to it
+
+2. **Build Failures**:
+   - Check that your solution targets Visual Studio 2010 toolset
+   - Verify Windows SDK 7.1a paths are correct
+
+3. **Docker Container Issues**:
+   - Ensure you're using process isolation mode on Windows Server 2019
+   - Verify Docker is configured for Windows containers
+   - Check container logs for startup errors
 
 ## Cleanup
 
-When the Docker container is stopped, the runner registration is removed from GitHub. However, due to a known issue, manual cleanup of stale runners may be required using `Cleanup-Runners.ps1`.
+When the Docker container is stopped, the runner registration is automatically removed from GitHub. However, if you encounter stale runners, you can use the provided `Cleanup-Runners.ps1` script:
+
+```powershell
+.\Cleanup-Runners.ps1 -Owner your_github_owner -Repository your_github_repo -Token your_github_token
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Author
 
