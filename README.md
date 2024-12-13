@@ -93,44 +93,111 @@ docker run -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -
 
 ## Using the Runner in GitHub Workflows
 
-To use this runner in your GitHub workflows, you need to specify the `runs-on` field with your self-hosted runner label. Here's a sample workflow that builds a Windows XP-compatible application:
+To use this runner in your GitHub workflows, you need to specify the `runs-on` field with your self-hosted runner label.  
+Without modification the labels self-hosted, windows, vs2010 and self-hosted-vs2010 are defined.  
+Here's a sample real workflow that builds a Windows XP-compatible application:
 
 ```yaml
 name: Build Windows XP App
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+    contents: write
+    pages: write
+    id-token: write
+    packages: write
+    attestations: write
 
 jobs:
   build:
-    runs-on: self-hosted  # Use your self-hosted runner
+    runs-on: self-hosted-vs2010  # Use https://github.com/sctg-development/github-runner-vs2010
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+      with:
+         fetch-depth: 1
     
-    - name: Setup MSBuild
-      shell: cmd
+    - name: Restore Qt487
+      shell: bash
       run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
+        _PWD=$(pwd)
+        echo "Running in $_PWD"
+        ./big-restore.sh
+        cd /c/
+        7z x -y "$_PWD/Qt487static.zip"
+
+    - name: Build Release
+      continue-on-error: true
+      shell: powershell
+      run: |
+        ./build.ps1 -Configurations "Release" -workspace $PWD -dism 0
+
+    # - name: Setup MSBuild
+    #   shell: cmd
+    #   run: |
+    #     call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
         
     - name: Build Solution
       shell: cmd
+    # This is or real build
+    # build.ps1 is provided as an example in the repo
+    - name: Build Release Verbose
+      continue-on-error: true
+      shell: powershell
       run: |
-        msbuild YourSolution.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v100 /p:WindowsTargetPlatformVersion=7.1A
-        
-    - name: Run Tests
-      shell: cmd
-      run: |
-        vstest.console.exe ./path/to/tests.dll
-        
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+        ./build.ps1 -Configurations "Release Verbose" -workspace $PWD -dism 0
+            
+    - name: Upload Release Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-xp-build Release
+        path: "./Release/Application/**"
+
+    - name: Upload Realease Verbose Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-xp-build Release Verbose
+        path: "./Release Verbose//Application/**"
+    
+    - name: Upload full build
+      uses: actions/upload-artifact@v4
       with:
         name: windows-xp-build
-        path: path/to/your/build/output/**
+        path: "./"
+
+    - name: Create zip file with built files
+      shell: bash
+      run: |
+        7z a -tzip myapp-Release.zip "./Release/Application/**"
+        7z a -tzip myapp-Release-Verbose.zip "./Release Verbose/Application/**"
+
+    - name: Create Release with gh
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: powershell
+      run: |
+        $version = Get-Item -Path "./Release/Application/myapp.exe" | Select-Object -ExpandProperty VersionInfo
+        $revision = $version.FileVersionRaw.Revision
+        $major = $version.FileVersionRaw.Major
+        $minor = $version.FileVersionRaw.Minor
+        $build = $version.FileVersionRaw.Build
+        $TAG_NAME = "v$major.$minor.$build.$revision"
+
+        Write-Output $TAG_NAME
+    
+        try {
+            gh release create $TAG_NAME -t "$TAG_NAME" -n "$TAG_NAME"
+        } catch {
+            Write-Output "Release may already exist, continuing..."
+        }
+        
+        gh release upload $TAG_NAME novasulf-ii-Release.zip --clobber
+        gh release upload $TAG_NAME novasulf-ii-Release-Verbose.zip --clobber
+
 ```
 
 Note: Replace `YourSolution.sln` and paths with your actual project files and build output locations.
@@ -140,6 +207,7 @@ Note: Replace `YourSolution.sln` and paths with your actual project files and bu
 The Dockerfile sets up the environment with:
 - Visual Studio 2010
 - .NET Framework 4.8
+- Windows SDK 7.0
 - Windows SDK 7.1a
 - GitHub runner (version 2.321.0 by default)
 

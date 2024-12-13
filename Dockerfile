@@ -37,7 +37,7 @@ RUN $ErrorActionPreference = 'Stop'; \
 
 #Install chocolatey
 RUN powershell -Command Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-
+RUN [Environment]::SetEnvironmentVariable(\"Path\", $env:Path + \";C:\Program Files\git\bin\;C:\Program Files\GitHub CLI\", \"Machine\")
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
 
 #Set working directory
@@ -55,7 +55,25 @@ RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/
 #Add GitHub runner configuration startup script
 ADD scripts/start.ps1 .
 ADD scripts/Cleanup-Runners.ps1 .
-#ENTRYPOINT ["pwsh.exe", ".\\start.ps1"]
+
+COPY atlmfc.7z /actions-runner/atlmfc.7z
+SHELL ["cmd", "/S", "/C"]
+RUN 7z x atlmfc.7z -y -o"C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC"
+RUN del atlmfc.7z
+
+COPY sdk71a.7z /actions-runner/sdk71a.7z
+COPY sdk71a.reg /actions-runner/sdk71a.reg
+SHELL ["cmd", "/S", "/C"]
+RUN 7z x sdk71a.7z -y -o"C:\Program Files (x86)\Microsoft SDKs\Windows\"
+RUN regedit /s sdk71a.reg
+RUN del sdk71a.reg
+RUN del sdk71a.7z
+
+COPY ammintrin.h /actions-runner/ammintrin.h
+
+# Deuxième étape : déplacer le fichier avec PowerShell
+SHELL ["powershell", "-Command"]
+RUN Copy-Item "/actions-runner/ammintrin.h" -Destination \"c:/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/ammintrin.h\" -Force
 
 # Set MSBuild as entrypoint
 ENTRYPOINT ["powershell.exe", ".\\start.ps1"]
