@@ -64,7 +64,7 @@ docker version
 ### Running the Container
 When running Windows containers, ensure you use the correct isolation mode:
 ```powershell
-docker run --isolation=process -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.321.0
+docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.321.0
 ```
 
 [Rest of the README continues as before...]
