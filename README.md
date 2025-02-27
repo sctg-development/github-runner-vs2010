@@ -78,10 +78,8 @@ docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_OWNER='y
 For organizations, you may need to specify the `GH_ORG` as `your_github_org`.
 
 ```powershell
-docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_ORG='v' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.322.0
+docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_ORG='your_github_org' sctg/github-runner-vs2010:2.322.0
 ```
-
-[Rest of the README continues as before...]
 
 ## Building the Docker Image
 
