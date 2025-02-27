@@ -1,6 +1,6 @@
 # GitHub Runner with Visual Studio 2010
 
-This repository provides a Docker image `sctg/github-runner-vs2010:2.321.0` for running a self-hosted GitHub runner with Visual Studio 2010 and Windows SDK 7.1a. The main purpose is to enable building Windows XP-compatible applications, as GitHub's standard runners no longer support Visual Studio 2010 and Microsoft has ended Windows XP support.
+This repository provides a Docker image `sctg/github-runner-vs2010:2.322.0` for running a self-hosted GitHub runner with Visual Studio 2010 and Windows SDK 7.1a. The main purpose is to enable building Windows XP-compatible applications, as GitHub's standard runners no longer support Visual Studio 2010 and Microsoft has ended Windows XP support.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_ORG='you
 To build the Docker image, run the following command:
 
 ```sh
-docker build . --tag sctg/github-runner-vs2010:2.321.0 --tag sctg/github-runner-vs2010:latest --push
+docker build . --tag sctg/github-runner-vs2010:2.322.0 --tag sctg/github-runner-vs2010:latest --push
 ```
 
 ## Running the Docker Container
@@ -100,7 +100,7 @@ To run the Docker container, you need to provide the following environment varia
 Run the container with the following command:
 
 ```sh
-docker run -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.321.0
+docker run -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.322.0
 ```
 
 ## Using the Runner in GitHub Workflows
@@ -222,7 +222,7 @@ The Dockerfile sets up the environment with:
 - .NET Framework 4.8
 - Windows SDK 7.0
 - Windows SDK 7.1a
-- GitHub runner (version 2.321.0 by default)
+- GitHub runner (version 2.322.0 by default)
 
 The `start.ps1` script handles the container initialization by:
 
