@@ -27,7 +27,7 @@ if ($owner) {
 } elseif ($org) {
     Write-Host "Using organization mode with org: $org"
     $jsonObj = gh api --method POST -H "Accept: application/vnd.github.v3+json" "/orgs/$org/actions/runners/registration-token"
-    $repoUrl = "https://github.com/$org/$repo"
+    $repoUrl = "https://github.com/$org"
 } else {
     Write-Error "Either GH_OWNER or GH_ORG must be specified"
     exit 1
