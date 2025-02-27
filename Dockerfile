@@ -1,11 +1,11 @@
 # docker build . --tag sctg/github-runner-vs2010:2.321.0 --tag sctg/github-runner-vs2010:latest --push
-# docker run -it -e GH_TOKEN=github_pat_GN -e GH_OWNER='user_or_org' -e GH_REPOSITORY='reponame' sctg/github-runner-vs2010:2.321.0
+# docker run -it -e GH_TOKEN=github_pat_GN -e GH_OWNER='user'  / -e GH_ORG='org' -e GH_REPOSITORY='reponame' sctg/github-runner-vs2010:2.321.0
 ##### BASE IMAGE INFO ######
 FROM cwuensch/vs2010:vcexpress as base
 # https://github.com/cwuensch/VS2010
 
 #input GitHub runner version argument
-ARG RUNNER_VERSION="2.321.0"
+ARG RUNNER_VERSION="2.322.0"
 
 LABEL Author="Ronan L"
 LABEL Email="ronan@sctg-development.eu.org"

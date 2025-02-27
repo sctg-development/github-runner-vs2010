@@ -19,20 +19,24 @@ Before running the Docker container, you need to configure your GitHub repositor
 4. Note down the repository URL and token (you'll need these later)
 
 Important security considerations:
+
 - Self-hosted runners should only be used in private repositories by default
 - If using in public repositories, enable the "Require approval for all outside collaborators" setting
 - Set up runner groups to control access to runners
 - Configure allowed actions and workflows in repository settings
 
 Runner labels:
+
 - Add relevant labels to your runner (e.g., 'windows-2019', 'vs2010')
 - These labels are used in workflow files to target specific runners
 
 ## Running Windows Docker Containers on Windows Server 2019
 
 ### Prerequisites
+
 1. Install Windows Server 2019 with Desktop Experience
 2. Enable Containers and Hyper-V features:
+
 ```powershell
 Install-WindowsFeature Containers
 Install-WindowsFeature Hyper-V
@@ -40,6 +44,7 @@ Restart-Computer -Force
 ```
 
 3. Install Docker:
+
 ```powershell
 # Install Docker
 Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/Windows-Containers/master/helpful_tools/Install-DockerCE/install-docker-ce.ps1" -OutFile install-docker-ce.ps1
@@ -56,15 +61,24 @@ docker version
 ```
 
 4. Configure Docker for Windows containers:
+
 ```powershell
 # Set Docker to use Windows containers by default
 [Environment]::SetEnvironmentVariable("DOCKER_DEFAULT_PLATFORM", "windows", "Machine")
 ```
 
 ### Running the Container
+
 When running Windows containers, ensure you use the correct isolation mode:
+
 ```powershell
-docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.321.0
+docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.322.0
+```
+
+For organizations, you may need to specify the `GH_ORG` as `your_github_org`.
+
+```powershell
+docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_ORG='v' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.322.0
 ```
 
 [Rest of the README continues as before...]
@@ -205,6 +219,7 @@ Note: Replace `YourSolution.sln` and paths with your actual project files and bu
 ## How it Works
 
 The Dockerfile sets up the environment with:
+
 - Visual Studio 2010
 - .NET Framework 4.8
 - Windows SDK 7.0
@@ -212,6 +227,7 @@ The Dockerfile sets up the environment with:
 - GitHub runner (version 2.321.0 by default)
 
 The `start.ps1` script handles the container initialization by:
+
 1. Authenticating with GitHub using the provided `GH_TOKEN`
 2. Obtaining a registration token for the GitHub runner
 3. Registering the runner with the specified repository
