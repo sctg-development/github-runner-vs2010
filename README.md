@@ -54,7 +54,7 @@ Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/microsoft/
 Start-Service docker
 
 # Switch to Windows containers
-& $Env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchDaemon
+& $Env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchWindowsEngine
 
 # Test Docker installation
 docker version
@@ -72,12 +72,9 @@ docker version
 When running Windows containers, ensure you use the correct isolation mode:
 
 ```powershell
+& $Env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchWindowsEngine
 docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.322.0
-```
-
-For organizations, you may need to specify the `GH_ORG` as `your_github_org`.
-
-```powershell
+# or for organizations, you may need to specify the `GH_ORG` as `your_github_org`.
 docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_ORG='your_github_org' sctg/github-runner-vs2010:2.322.0
 ```
 
@@ -86,6 +83,7 @@ docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_ORG='you
 To build the Docker image, run the following command:
 
 ```sh
+& $Env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchWindowsEngine
 docker build . --tag sctg/github-runner-vs2010:2.322.0 --tag sctg/github-runner-vs2010:latest --push
 ```
 
@@ -95,12 +93,13 @@ To run the Docker container, you need to provide the following environment varia
 
 - `GH_TOKEN`: Your GitHub Personal Access Token with the minimum required scopes: `repo`, `read:org`.
 - `GH_OWNER`: The owner of the repository (user or organization).
+- or `GH_ORG`: The organization of the repository.
 - `GH_REPOSITORY`: The name of the repository.
 
 Run the container with the following command:
 
 ```sh
-docker run -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.322.0
+docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_OWNER='your_github_owner' -e GH_REPOSITORY='your_github_repo' sctg/github-runner-vs2010:2.322.0
 ```
 
 ## Using the Runner in GitHub Workflows
