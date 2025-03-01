@@ -106,7 +106,7 @@ docker run --isolation=hyperv -it -e GH_TOKEN='your_github_token' -e GH_OWNER='y
 
 To use this runner in your GitHub workflows, you need to specify the `runs-on` field with your self-hosted runner label.  
 Without modification the labels self-hosted, windows, vs2010 and self-hosted-vs2010 are defined.  
-Here's a sample real workflow that builds a Windows XP-compatible application:
+Here's a sample real workflow that builds a Windows XP-compatible application using the sample [build.ps1](build.ps1) script:
 
 ```yaml
 name: Build Windows XP App
@@ -132,6 +132,7 @@ jobs:
       with:
          fetch-depth: 1
     
+    # this is a real example of a restore script for a Qt project
     - name: Restore Qt487
       shell: bash
       run: |
@@ -186,7 +187,7 @@ jobs:
         7z a -tzip myapp-Release.zip "./Release/Application/**"
         7z a -tzip myapp-Release-Verbose.zip "./Release Verbose/Application/**"
 
-    - name: Create Release with gh
+    - name: Create Release with gh and extract version from built file
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: powershell
