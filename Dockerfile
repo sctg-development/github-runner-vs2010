@@ -50,7 +50,7 @@ RUN choco install -y git
 RUN choco install -y vim
 RUN choco install -y gh
 # Fail the build if a required tool is missing (native exit codes are not checked above).
-RUN foreach ($f in 'C:\\Program Files\\Git\\cmd\\git.exe', 'C:\\Program Files\\GitHub CLI\\gh.exe') { if (-not (Test-Path $f)) { throw \"missing $f\" } }
+RUN foreach ($f in 'C:/Program Files/Git/cmd/git.exe', 'C:/Program Files/GitHub CLI/gh.exe') { if (-not (Test-Path $f)) { throw ('missing ' + $f) } }
 
 
 
