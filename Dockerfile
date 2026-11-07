@@ -43,7 +43,14 @@ SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
 #Set working directory
 WORKDIR /actions-runner
 # We need 7z to unpack the ISOs
-RUN choco install -y 7zip git vim gh
+# One package per RUN: a combined "choco install 7zip git vim gh" silently stopped after git
+# (pending-reboot exit code), leaving the image without gh, which start.ps1 needs.
+RUN choco install -y 7zip
+RUN choco install -y git
+RUN choco install -y vim
+RUN choco install -y gh
+# Fail the build if a required tool is missing (native exit codes are not checked above).
+RUN foreach ($f in 'C:\\Program Files\\Git\\cmd\\git.exe', 'C:\\Program Files\\GitHub CLI\\gh.exe') { if (-not (Test-Path $f)) { throw \"missing $f\" } }
 
 
 
